@@ -1,108 +1,119 @@
-# PlantVillage Analysis
+# Analysis: Deep Learning for Plant Disease Detection
 
-This repository contains the code and results in context of the paper titled **Using Deep Learning for Image-Based Plant Disease Detection**
+[![Paper](https://img.shields.io/badge/Paper-Read-green)](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2016.01419/full)
+[![EPFL](https://img.shields.io/badge/Lab-Digital%20Epidemiology-red)](https://www.salathegroup.com/)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-blue)](https://huggingface.co/datasets/mohanty/PlantVillage)
 
-####Organisation of code
-The code for all the experiment configurations is arranged in directory structures across three different levels.
+<img src="https://raw.githubusercontent.com/spMohanty/PlantVillage-Dataset/master/generated_for_paper/plantvillage.jpg" alt="PlantVillage Dataset Sample" width="600"/>
 
-The first level is based on the choice of Deep Neural Network Architecture, which is divided into :
+This directory contains the experimental code and configurations for the paper:  
+[**"Using Deep Learning for Image-Based Plant Disease Detection"**](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2016.01419/full)  
+*Mohanty et al. (2016)*
 
-* AlexNet
-* GoogleNet
+---
 
-Inside each of these folders, the second layer is based on the choice of dataset type, and the train-test split. The available options are :
+## 📂 Code Organization
 
-* color-20-80
-* color-40-60
-* color-50-50
-* color-60-40
-* color-80-20
-* grayscale-20-80
-* grayscale-40-60
-* grayscale-50-50
-* grayscale-60-40
-* grayscale-80-20
-* segmented-20-80
-* segmented-40-60
-* segmented-50-50
-* segmented-60-40
-* segmented-80-20
+The experiment configurations are structured hierarchically to cover **60 unique experiments**, exploring all combinations of standard architectures, dataset types, splits, and training modes.
 
-And finally, inside each of these folders, the third layer is based on the choice of training approach, which is divided into:
+### Hierarchy
+`[Architecture] / [Dataset_Type]-[Split] / [Training_Approach]`
 
-* Traing From Scratch
-* Finetuning (Transfer Learning)
+| Layer | Options | Details |
+| :--- | :--- | :--- |
+| **1. Architecture** | `alexnet`, `googLeNet` | Standard deep CNN architectures. |
+| **2. Dataset Type** | `color`, `grayscale`, `segmented` | Image preprocessing variations. |
+| **3. Split** | `80-20` to `20-80` | Train/Test split ratios. |
+| **4. Approach** | `Train From Scratch`, `Finetuning` | Initialization strategy (Random vs ImageNet). |
 
+---
 
-All of these configurations lead to a total of **60** different experiment configurations.
+## 🛠️ Experiment Directory Structure
 
-#####Structure of a single experiment configuration directory
+Each leaf directory (e.g., `alexnet/color-80-20/Train From Scratch/`) is a self-contained experiment environment:
 
-Every exeperiment configuration directory, contains the following files and folders, which are as follows :
+| File / Folder | Function | Description |
+| :--- | :--- | :--- |
+| **`train.sh`** | **Training** | Script to initiate model training via Caffe. |
+| **`test.sh`** | **Testing** | Iterates through saved snapshots to run inference. |
+| **`results/`** | **Analysis** | Scripts to generate confusion matrices and graphs. |
+| `*.prototxt` | **Config** | Neural network definitions (Solver, Train/Val, Deploy). |
+| `caffe.log` | **Logs** | Raw training output log. |
+| `hdf5_dumps/` | **Data** | (Generated) Raw predictions and labels for analysis. |
 
+---
 
-* `caffe.log` : The caffe log over the training phase of the experiment 
-* `deploy.prototxt` : The caffe deploy.prototxt for the particular experiment, which can be used for predictions
-* `hdf5_dumps` : Holds the hdf5 dumps over all the iterations in the testing phase. Due to the size of the individual files, this folder has not been added to this repository, but can be provided on request.
-* `labels.txt` : Holds the class label mappings for all the classes. The line number(starting from 0) refers to the internal class label value for caffe
-* `slurm-*.out` : Cluster specific outputs, can be ignore, and will mostly be removed from the repository in the future
-* `solver.prototxt` : Solver configuration for caffe for the particular experiment
-* `test_logs` : holds the individual caffe logs for the testing phase for all the snapshots generated during the training phase
-* `test_prototxts` : Holds prototxt configurations for the testing phase corresponding to all the snapshots generated during the training phase
-* `test.sh` : Script to initiate the testing of the models across all the snapshots
-* `train.sh` : Script to initiate the training of the models using the particular experiment configuration
-* `train_val.prototxt` : train phase caffe configurations
-* `results` : Folder containing the results and analysis of the testing phase.The structure of the results folder is as follows:
-    - `classification_reports`: Holds the classifications reports for all the snapshots generated during the training phase
-    - `confusion_matrices`: Holds the confusion matrices for all the snapshots generated during the training phase
-    - `evaluation_graphs`: Holds a sklearn classification report for all the snapshots generated during the training phase  
-    - `generate_graphs.py`: Script used to generate all the graphs and reports for the said exepriment
-    - `parse_log.py`: Parses Caffe Logs to obtain and store as a CSV the iteration, accuracy, loss values from the training phase.
-    - `generate_results.sh`: A simple wrapper script over `parsed_log.py` and `generate_graphs.py`.
-    - `parsed_caffe_output`: Folder containing the parsed caffe logs, and generated evaluation log.
-    
-    
-#####Other considerations
-The scripts `train.sh`, `test.sh` and `generate_results.sh` were designed to run on our cluster, hence have some cluster specific code in them. 
-So lines which look like :
-```
-module load caffe/anaconda
-source activate mohanty
-```
-can safely be commented out.
+## ⚠️ Prerequisites & Setup
 
+> [!WARNING]
+> **Legacy Codebase (Caffe Era)**: This project was built during the Caffe era (2015-2016) and uses **Python 2.7**. It is provided **"as is"** for reference and reproducibility purposes. Modernizing it to PyTorch/TensorFlow would require a complete rewrite.
 
-The `solver.prototxt`, `train_val.prototxt`, `test.sh` should be modified to point to your own snapshot location, and lmdb datastore.
-The easiest would be create the corresponding folder at :
-`/scratch/mohanty/AWS_FRESH_RUN/snapshots_final/<experiment-name>` for the snapshots, and save the lmdb dataset at : `/home/mohanty/data/final_dataset/lmdb/<experiment-name>/`
+To reproduce these experiments, ensure you have:
+1.  **Caffe Framework**: Installed and in your system path.
+2.  **LMDB Dataset**: The PlantVillage dataset converted to LMDB format.
+3.  **GPU Compute**: Training on CPU is not recommended.
 
+### Path Configuration
 
+> [!IMPORTANT]
+> **Action Required**: The provided scripts contain hardcoded paths (e.g., `/scratch/mohanty/...`) specific to the original computing cluster. You **must** find and replace these with your local paths before running.
 
-###Workflow
-####Training
-```
-cd <path_to_experiment_config_directory>
+**Files to Update:**
+*   `solver.prototxt`: Update `net` (path to train_val) and `snapshot_prefix` (snapshot storage).
+*   `train_val.prototxt`: Update `source` paths for TRAIN and TEST LMDBs.
+*   `test.sh`: Update paths to the `caffe` binary and your snapshot directory.
 
-#Edit the respective files to point to your own snapshot directory, and lmdb dataset as described in the previous section
+---
 
-#Start training
+## 🚀 Workflow
+
+### 1. Training
+Navigate to your chosen experiment directory and start the training job.
+```bash
+cd alexnet/color-80-20/Train\ From\ Scratch/
 ./train.sh
-
-#Start the tests
-./test.sh
-#Generate results
-./results/generate_results.sh
-
-#Now you should have the classification reports, confusion matrices, and evaluation graphs inside the results folder
-
 ```
 
+### 2. Testing
+Once training is complete, run the test script to evaluate all model snapshots.
+```bash
+./test.sh
+```
+*This step generates `hdf5_dumps` used for analysis.*
 
-    
-#Author   
+### 3. Analysis
+Generate performance graphs, classification reports, and confusion matrices.
+```bash
+cd results
+./generate_results.sh
+```
+*Outputs will be saved in `results/classification_reports`, `results/confusion_matrices`, etc.*
 
-S.P. Mohanty {<spmohanty91@gmail.com>, <sharada.mohanty@epfl.ch>}
+---
 
+## Acknowledgements
 
+The segmented version of the dataset used in this paper was generated by **Boris Conforty**.  
+For details on the segmentation process, please refer to:
+*   [**`PlantVillageSegmentation.pdf`**](./PlantVillageSegmentation.pdf) (included in this repository)
+*   [Boris-c/PlantVillage-Segmentation](https://github.com/Boris-c)
 
+## 📄 Citation
 
+```bibtex
+@article{Mohanty_Hughes_Salathé_2016,
+    title   = {Using deep learning for image-based plant disease detection},
+    volume  = {7},
+    DOI     = {10.3389/fpls.2016.01419},
+    journal = {Frontiers in Plant Science},
+    author  = {Mohanty, Sharada P. and Hughes, David P. and Salathé, Marcel},
+    year    = {2016},
+    month   = {Sep}
+} 
+```
+
+## 👥 Authors
+
+**Sharada Mohanty** <sharada.mohanty@epfl.ch>  
+**Marcel Salathé** <Marcel.Salathe@epfl.ch>  
+*Digital Epidemiology Lab, EPFL*
